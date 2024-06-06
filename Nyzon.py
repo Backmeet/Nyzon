@@ -71,3 +71,4 @@ while True:
     list_to_show = UserHere.server_ask_getlist()
 
     draw_menu()
+
