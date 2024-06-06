@@ -7,6 +7,8 @@ width, height = 900, 600
 screen = pg.display.set_mode((width, height))
 title_font = pg.font.SysFont(None, 35)
 description_font = pg.font.SysFont(None, 20)
+NYZON_PORT = 51250
+NETWORKPY_PORT = 51251
 
 UserHere = networking.UserNode(input("UserName?:"))  # Replace "username" with the actual username
 list_to_show = []
