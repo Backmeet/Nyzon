@@ -92,4 +92,76 @@ class Server:
                 item_data = json.loads(' '.join(parts[2:]))
                 if len(main_list[group_index]) < 5:
                     main_list[group_index].append(item_data)
-                    publicsock.sendall(json.dumps
+                    publicsock.sendall(json.dumps)|
+({"status": "success", "message": f"Appended item to group {group_index}"}).encode())
+                    return json.dumps({"status": "success", "message": f"Appended item to group {group_index}"})
+                else:
+                    return json.dumps({"status": "error", "message": "Item group is full"})
+            except IndexError:
+                return json.dumps({"status": "error", "message": "Group index out of range"})
+            except ValueError:
+                return json.dumps({"status": "error", "message": "Invalid group index or item data"})
+
+        elif command == "GETLIST":
+            return json.dumps(main_list)
+        
+        else:
+            return json.dumps([bogus_item])
+
+class UserNode:
+    def __init__(self, username, host='localhost', port=NYZON_PORT):
+        self.username = username
+        self.host = host
+        self.port = port
+        self.connect_to_server()
+
+    def connect_to_server(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.sock.connect((self.host, self.port))
+            self.sock.sendall(f"HELLO {self.username}".encode())
+            response = self.sock.recv(1024).decode()
+            if response != "WELCOME":
+                raise Exception("Failed to connect to server")
+        except Exception as e:
+            print(f"Error connecting to server: {e}")
+            self.sock.close()
+            self.sock = None
+
+    def server_ask_append_group(self):
+        if self.sock:
+            try:
+                self.sock.sendall("APPENDGROUP".encode())
+                response = self.sock.recv(1024).decode()
+                print(response)
+            except Exception as e:
+                print(f"Error sending request to server: {e}")
+        else:
+            print("Socket is not connected")
+
+    def server_ask_append_item(self, group_index, item_data):
+        if self.sock:
+            try:
+                request_data = f"APPENDITEM {group_index} {json.dumps(item_data)}"
+                self.sock.sendall(request_data.encode())
+                response = self.sock.recv(1024).decode()
+                print(response)
+            except Exception as e:
+                print(f"Error sending request to server: {e}")
+        else:
+            print("Socket is not connected")
+
+    def server_ask_getlist(self):
+        if self.sock:
+            try:
+                self.sock.sendall("GETLIST".encode())
+                response = self.sock.recv(1024).decode()
+                return json.loads(response)
+            except Exception as e:
+                print(f"Error sending request to server: {e}")
+        else:
+            print("Socket is not connected")
+
+    def close_connection(self):
+        if self.sock:
+            self.sock.close()
